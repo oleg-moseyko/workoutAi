@@ -1,5 +1,5 @@
 // api/chat.js
-import fetch from "node-fetch";
+const fetch = require("node-fetch");
 
 
 export default async function handler(req, res) {
