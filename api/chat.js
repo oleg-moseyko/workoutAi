@@ -1,9 +1,8 @@
 // api/chat.js
-const fetch = require("node-fetch");
-
-
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
+module.exports = async (req, res) => {
+  if (req.method !== "POST") {
+    return res.status(405).send("Method Not Allowed");
+  }
 
   const { messages } = req.body;
 
@@ -15,16 +14,21 @@ export default async function handler(req, res) {
         "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-5-mini",
-        messages: messages
+        model: "gpt-4o-mini",
+        messages
       })
     });
 
     const data = await response.json();
-    const reply = data.choices[0].message.content;
-    res.status(200).json({ reply });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error calling OpenAI API" });
+
+    if (!data.choices || !data.choices[0]) {
+      console.error("Bad OpenAI response:", data);
+      return res.status(500).json({ error: "Invalid OpenAI response", data });
+    }
+
+    return res.status(200).json({ reply: data.choices[0].message.content });
+  } catch (error) {
+    console.error("Server error:", error);
+    return res.status(500).json({ error: error.toString() });
   }
-}
+};
